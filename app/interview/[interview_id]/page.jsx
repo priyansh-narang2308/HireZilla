@@ -19,6 +19,7 @@ const InterviewPage = () => {
   const videoRef = useRef(null);
 
 
+  const [userEmail, setUserEmail] = useState("")
   const { interviewInfo, setInterviewInfo } = useContext(InterviewDataContext);
 
   const router = useRouter();
@@ -67,6 +68,7 @@ const InterviewPage = () => {
     console.log(Interviews[0]);
     setInterviewInfo({
       userName: userName,
+      userEmail:userEmail,
       interviewData: Interviews[0]
     });
     router.push(`/interview/${interview_id}/start`);
@@ -115,6 +117,20 @@ const InterviewPage = () => {
                   className="w-full"
                 />
               </div>
+
+              <div className="space-y-2">
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                  Enter your Email
+                </label>
+                <Input
+                  id="email"
+                  onChange={(e) => setUserEmail(e.target.value)}
+                  placeholder="e.g. johndoe@example.com"
+                  className="w-full"
+                />
+              </div>
+
+              
 
               <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 p-4 rounded-lg">
                 <div className="flex items-center mb-2">

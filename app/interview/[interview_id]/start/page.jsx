@@ -8,7 +8,6 @@ import Vapi from "@vapi-ai/web";
 import AlertCompo from "./_components/alert-compo";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
-import clsx from "clsx";
 
 const StartInterview = () => {
   const { interviewInfo } = useContext(InterviewDataContext);
@@ -19,13 +18,10 @@ const StartInterview = () => {
   const [callDuration, setCallDuration] = useState(0);
   const vapi = new Vapi(process.env.NEXT_PUBLIC_VAPI_API_KEY);
 
-  // Timer effect
   useEffect(() => {
     let interval;
     if (aiSpeaking || userSpeaking) {
-      interval = setInterval(() => {
-        setCallDuration((prev) => prev + 1);
-      }, 1000);
+      interval = setInterval(() => setCallDuration(prev => prev + 1), 1000);
     }
     return () => clearInterval(interval);
   }, [aiSpeaking, userSpeaking]);
@@ -43,8 +39,7 @@ const StartInterview = () => {
 
   const StartCall = () => {
     const questionList = interviewInfo?.interviewData?.questionList
-      ?.map((item) => item?.question)
-      .join(", ");
+      ?.map((item) => item?.question).join(", ");
 
 
     const assistantOptions = {
@@ -111,205 +106,99 @@ Important:
     vapi.start(assistantOptions);
   };
 
-  const stopInterview = () => {
-    vapi.stop();
-  };
+  const stopInterview = () => vapi.stop();
 
   const handleCameraToggle = async () => {
-    setShowCamera((prev) => !prev);
+    setShowCamera(prev => !prev);
     if (!showCamera && navigator.mediaDevices.getUserMedia) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
+        if (videoRef.current) videoRef.current.srcObject = stream;
       } catch (err) {
-        console.error("Camera access error:", err);
+        console.error("Camera error:", err);
       }
-    } else {
-      if (videoRef.current?.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
-      }
+    } else if (videoRef.current?.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
     }
   };
 
-  vapi.on("call-start", () => {
-    toast.success("Call Connected");
-    setCallDuration(0);
-  });
+  vapi.on("call-start", () => toast.success("Call Connected"));
   vapi.on("call-end", () => toast.success("Interview Ended"));
   vapi.on("speech-start", ({ speaker }) => {
-    if (speaker === "assistant") {
-      setAiSpeaking(true);
-      setUserSpeaking(false);
-    } else {
-      setUserSpeaking(true);
-      setAiSpeaking(false);
-    }
+    speaker === "assistant" ? (setAiSpeaking(true), setUserSpeaking(false))
+      : (setUserSpeaking(true), setAiSpeaking(false));
   });
   vapi.on("speech-end", () => {
     setAiSpeaking(false);
     setUserSpeaking(false);
   });
 
+  vapi.on("message",(message)=>{
+    console.log(message)
+  })
+
   return (
-    <div className="min-h-screen bg-[#0D1117] text-white px-6 py-10 lg:px-32 xl:px-48 transition-all">
-      <div className="flex justify-between items-center border-b border-gray-700 pb-6">
-        <h1 className="text-3xl font-extrabold tracking-wide text-green-400">
-          AI Interview Session
-        </h1>
-        <div className="flex items-center gap-2 text-gray-400 text-lg font-semibold">
-          <Timer className="w-5 h-5 text-green-400 animate-pulse" />
+    <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
+      <div className="flex justify-between items-center border-b border-gray-700 pb-4">
+        <h1 className="text-xl md:text-2xl font-bold text-green-400">AI Interview</h1>
+        <div className="flex items-center gap-2 text-gray-400">
+          <Timer className="w-4 h-4 text-green-400" />
           {formatTime(callDuration)}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-10">
-        <div
-          className={clsx(
-            "bg-[#161B22] border rounded-2xl h-[400px] flex flex-col items-center justify-center gap-4 relative transition-all",
-            aiSpeaking
-              ? "border-green-500 shadow-lg shadow-green-500/30"
-              : "border-gray-700"
-          )}
-        >
-          {aiSpeaking && (
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-green-500/10 to-transparent opacity-20 animate-pulse"></div>
-          )}
-
-          <div className="relative z-10 flex flex-col items-center justify-center gap-4">
-            <div className={clsx(
-              "rounded-full p-1 transition-all",
-              aiSpeaking ? "ring-2 ring-green-500" : "ring-1 ring-gray-600"
-            )}>
-              <Image
-                src="/ailogo.png"
-                alt="AI Logo"
-                width={120}
-                height={120}
-                className={clsx(
-                  "rounded-full object-cover shadow-md",
-                  aiSpeaking ? "scale-105" : "scale-100"
-                )}
-              />
-            </div>
-            <span className="text-lg font-semibold text-gray-300">
-              AI Recruiter
-            </span>
-            {aiSpeaking && (
-              <div className="flex space-x-2 mt-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-              </div>
-            )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <div className={`bg-gray-800 border rounded-xl h-64 md:h-80 flex flex-col items-center justify-center ${aiSpeaking ? "border-green-500" : "border-gray-700"}`}>
+          <div className="relative">
+            <Image src="/ailogo.png" alt="AI" width={80} height={80}
+              className={`rounded-full ${aiSpeaking ? "scale-110" : ""}`} />
           </div>
+          <span className="mt-2 text-gray-300">AI Recruiter</span>
+          {aiSpeaking && <div className="mt-1 text-green-400">Speaking...</div>}
         </div>
 
-        <div
-          className={clsx(
-            "bg-[#161B22] border rounded-2xl h-[400px] flex flex-col items-center justify-center gap-4 relative transition-all",
-            userSpeaking
-              ? "border-blue-500 shadow-lg shadow-blue-500/30"
-              : "border-gray-700"
+        {/* User Panel */}
+        <div className={`bg-gray-800 border rounded-xl h-64 md:h-80 flex flex-col items-center justify-center ${userSpeaking ? "border-blue-500" : "border-gray-700"}`}>
+          {showCamera ? (
+            <video ref={videoRef} autoPlay muted playsInline className="h-40 rounded-lg" />
+          ) : (
+            <div className="w-20 h-20 rounded-full bg-green-600 flex items-center justify-center text-white text-2xl">
+              {interviewInfo?.userName?.[0]?.toUpperCase() || "U"}
+            </div>
           )}
-        >
-          {userSpeaking && (
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-500/10 to-transparent opacity-20 animate-pulse"></div>
-          )}
-
-          <div className="relative z-10 flex flex-col items-center justify-center gap-4">
-            {showCamera ? (
-              <div className={clsx(
-                "rounded-xl overflow-hidden transition-all",
-                userSpeaking ? "ring-2 ring-blue-500" : "ring-1 ring-gray-600"
-              )}>
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  muted
-                  playsInline
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            ) : (
-              <div className={clsx(
-                "w-24 h-24 rounded-full bg-green-600 flex items-center justify-center text-white text-4xl font-bold shadow-md transition-all",
-                userSpeaking ? "ring-2 ring-blue-500 scale-105" : "ring-1 ring-gray-600 scale-100"
-              )}>
-                {interviewInfo?.userName?.[0]?.toUpperCase() || "U"}
-              </div>
-            )}
-            <span className="text-lg font-semibold text-gray-300">You</span>
-            {userSpeaking && (
-              <div className="flex space-x-2 mt-2">
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
-              </div>
-            )}
-          </div>
-
-          <Button
-            variant={"outline"}
-            onClick={handleCameraToggle}
-            className="absolute top-4 right-4 px-3 py-1 text-sm text-black hover:bg-gray-300 rounded-full shadow z-10"
-          >
+          <span className="mt-2 text-gray-300">You</span>
+          {userSpeaking && <div className="mt-1 text-blue-400">Speaking...</div>}
+          <Button onClick={handleCameraToggle} variant="default" size="sm" className="mt-2">
             {showCamera ? "Hide Camera" : "Show Camera"}
           </Button>
         </div>
       </div>
 
-      <div className="flex justify-center gap-8 mt-12 flex-wrap">
-        <Button
-          className={clsx(
-            "flex items-center justify-center gap-3 text-white font-semibold py-3 px-6 min-w-[220px] rounded-full shadow-lg",
-            userSpeaking ? "bg-green-700" : "bg-green-600 hover:bg-green-700"
-          )}
-        >
-          <Mic className="w-5 h-5" />
-          {userSpeaking ? "Speaking..." : "Speak to Answer"}
+      <div className="flex justify-center gap-4 mt-8">
+        <Button className={`flex items-center gap-2 ${userSpeaking ? "bg-green-700" : "bg-green-600"}`}>
+          <Mic size={16} />
+          {userSpeaking ? "Speaking..." : "Speak"}
         </Button>
 
         <AlertCompo stopInterview={stopInterview}>
-          <Button className="flex items-center justify-center gap-3 bg-red-600 hover:bg-red-700 text-white font-semibold py-3 px-6 min-w-[220px] rounded-full shadow-lg">
-            <Phone className="w-5 h-5" />
+          <Button variant="destructive" className="flex items-center gap-2">
+            <Phone size={16} />
             End Interview
           </Button>
         </AlertCompo>
       </div>
 
-      <h2 className={clsx(
-        "text-center mt-6 text-2xl font-medium",
-        aiSpeaking || userSpeaking ? "text-green-400" : "text-gray-400"
-      )}>
-        {aiSpeaking
-          ? "AI Recruiter is speaking..."
-          : userSpeaking
-            ? "Listening to your response..."
-            : "Interview In Progress..."}
-      </h2>
-
-      <style jsx global>{`
-        @keyframes pulse {
-          0%, 100% { opacity: 0.2; }
-          50% { opacity: 0.5; }
-        }
-        .animate-pulse {
-          animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-5px); }
-        }
-        .animate-bounce {
-          animation: bounce 1s infinite;
-        }
-      `}</style>
+      <div className="text-center mt-4 text-gray-400">
+        {aiSpeaking ? "AI is speaking..."
+          : userSpeaking ? "Listening to you..."
+            : "Interview in progress"}
+      </div>
     </div>
   );
 };
 
 export default StartInterview;
+
+
 
 

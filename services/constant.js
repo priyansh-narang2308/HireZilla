@@ -50,3 +50,23 @@ format: interviewQuestions=[
 Respond ONLY with raw JSON. Do NOT include any explanation, description, or markdown formatting.
 Response should start and end with just a JSON array.
 🎯 The goal is to create a structured, relevant, and time-optimized interview plan for a {{jobTitle}} role.`;
+
+
+export const FEEDBACK_PROMPT =`{{conversation}}
+Depends on this Interview Conversation between assistant and user,
+Give me feedback for user interview. Give me rating out of 10 for Technical Skills, Communication, Problem Solving, Experience. Also give me summary in 3 lines about the interview and one line to let me know whether it is recommended for hire or not with a message. Give me response in JSON format.
+
+{
+  "feedback": {
+    "rating": {
+      "technicalSkills": 5,
+      "communication": 6,
+      "problemSolving": 4,
+      "experience": 7
+    },
+    "summary": "<in 3 lines>",
+    "recommendation": "",
+    "recommendationMsg": ""
+  }
+}
+`

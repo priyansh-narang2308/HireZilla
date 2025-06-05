@@ -21,19 +21,17 @@ const interviewTypes = [
   { label: "Leadership", icon: Users, color: "bg-purple-100 text-purple-700" },
 ];
 
-const FormContainer = ({ onHandleInputChange }) => {
+const FormContainer = ({ onHandleInputChange, goToNext }) => {
 
   const [interviewType, setInterviewType] = useState([]);
 
-  useEffect(()=>{
-    if(interviewType){
-      onHandleInputChange("type",interviewType)
+  useEffect(() => {
+    if (interviewType) {
+      onHandleInputChange("type", interviewType);
     }
-  },[interviewType])
+  }, [interviewType]);
 
-  const addInterviewType=(type)=>{
-    
-  }
+
 
   return (
     <div className="p-6 rounded-2xl bg-white shadow-2xl space-y-6">
@@ -96,7 +94,7 @@ const FormContainer = ({ onHandleInputChange }) => {
       </div>
       <div className="flex justify-end mt-7">
 
-        <Button className={"font-medium cursor-pointer"}> <Sparkles /> Generate Questions</Button>
+        <Button className={"font-medium cursor-pointer"} onClick={() => goToNext()}> <Sparkles /> Generate Questions</Button>
       </div>
     </div>
   );

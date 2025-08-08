@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div>
       Hello
-      <Button>Fuck</Button>
+      <Button>go to interview page?</Button>
     </div>
   );
 }

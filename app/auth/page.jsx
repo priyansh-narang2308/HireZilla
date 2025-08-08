@@ -7,7 +7,6 @@ import toast from "react-hot-toast";
 
 const Login = () => {
 
-  // sign with supabse
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google"

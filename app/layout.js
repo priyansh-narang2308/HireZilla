@@ -21,7 +21,7 @@ export default function RootLayout({ children }) {
     <Provider>
 
       <html lang="en" suppressHydrationWarning>
-        <body
+        <body suppressHydrationWarning
           className={`${ubuntu.className}`}
         >
           {children}

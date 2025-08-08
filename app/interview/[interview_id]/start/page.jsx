@@ -8,6 +8,7 @@ import Vapi from "@vapi-ai/web";
 import AlertCompo from "./_components/alert-compo";
 import { Button } from "@/components/ui/button";
 import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 const StartInterview = () => {
   const { interviewInfo } = useContext(InterviewDataContext);
@@ -17,11 +18,12 @@ const StartInterview = () => {
   const [userSpeaking, setUserSpeaking] = useState(false);
   const [callDuration, setCallDuration] = useState(0);
   const vapi = new Vapi(process.env.NEXT_PUBLIC_VAPI_API_KEY);
+  const router = useRouter();
 
   useEffect(() => {
     let interval;
     if (aiSpeaking || userSpeaking) {
-      interval = setInterval(() => setCallDuration(prev => prev + 1), 1000);
+      interval = setInterval(() => setCallDuration((prev) => prev + 1), 1000);
     }
     return () => clearInterval(interval);
   }, [aiSpeaking, userSpeaking]);
@@ -30,7 +32,9 @@ const StartInterview = () => {
     const hrs = Math.floor(seconds / 3600);
     const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${hrs.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${hrs.toString().padStart(2, "0")}:${mins
+      .toString()
+      .padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   useEffect(() => {
@@ -39,8 +43,8 @@ const StartInterview = () => {
 
   const StartCall = () => {
     const questionList = interviewInfo?.interviewData?.questionList
-      ?.map((item) => item?.question).join(", ");
-
+      ?.map((item) => item?.question)
+      .join(", ");
 
     const assistantOptions = {
       name: "AI Recruiter",
@@ -106,26 +110,32 @@ Important:
     vapi.start(assistantOptions);
   };
 
-  const stopInterview = () => vapi.stop();
+  const stopInterview = () => {
+    vapi.stop();
+    router.push("/feedback")
+  };
 
   const handleCameraToggle = async () => {
-    setShowCamera(prev => !prev);
+    setShowCamera((prev) => !prev);
     if (!showCamera && navigator.mediaDevices.getUserMedia) {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
         if (videoRef.current) videoRef.current.srcObject = stream;
       } catch (err) {
         console.error("Camera error:", err);
       }
     } else if (videoRef.current?.srcObject) {
-      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+      videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
     }
   };
 
   vapi.on("call-start", () => toast.success("Call Connected"));
   vapi.on("call-end", () => toast.success("Interview Ended"));
   vapi.on("speech-start", ({ speaker }) => {
-    speaker === "assistant" ? (setAiSpeaking(true), setUserSpeaking(false))
+    speaker === "assistant"
+      ? (setAiSpeaking(true), setUserSpeaking(false))
       : (setUserSpeaking(true), setAiSpeaking(false));
   });
   vapi.on("speech-end", () => {
@@ -133,14 +143,16 @@ Important:
     setUserSpeaking(false);
   });
 
-  vapi.on("message",(message)=>{
-    console.log(message)
-  })
+  vapi.on("message", (message) => {
+    console.log(message);
+  });
 
   return (
     <div className="min-h-screen bg-gray-900 text-white p-4 md:p-8">
       <div className="flex justify-between items-center border-b border-gray-700 pb-4">
-        <h1 className="text-xl md:text-2xl font-bold text-green-400">AI Interview</h1>
+        <h1 className="text-xl md:text-2xl font-bold text-green-400">
+          AI Interview
+        </h1>
         <div className="flex items-center gap-2 text-gray-400">
           <Timer className="w-4 h-4 text-green-400" />
           {formatTime(callDuration)}
@@ -148,34 +160,64 @@ Important:
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-        <div className={`bg-gray-800 border rounded-xl h-64 md:h-80 flex flex-col items-center justify-center ${aiSpeaking ? "border-green-500" : "border-gray-700"}`}>
+        <div
+          className={`bg-gray-800 border rounded-xl h-64 md:h-80 flex flex-col items-center justify-center ${
+            aiSpeaking ? "border-green-500" : "border-gray-700"
+          }`}
+        >
           <div className="relative">
-            <Image src="/ailogo.png" alt="AI" width={80} height={80}
-              className={`rounded-full ${aiSpeaking ? "scale-110" : ""}`} />
+            <Image
+              src="/ailogo.png"
+              alt="AI"
+              width={80}
+              height={80}
+              className={`rounded-full ${aiSpeaking ? "scale-110" : ""}`}
+            />
           </div>
           <span className="mt-2 text-gray-300">AI Recruiter</span>
           {aiSpeaking && <div className="mt-1 text-green-400">Speaking...</div>}
         </div>
 
         {/* User Panel */}
-        <div className={`bg-gray-800 border rounded-xl h-64 md:h-80 flex flex-col items-center justify-center ${userSpeaking ? "border-blue-500" : "border-gray-700"}`}>
+        <div
+          className={`bg-gray-800 border rounded-xl h-64 md:h-80 flex flex-col items-center justify-center ${
+            userSpeaking ? "border-blue-500" : "border-gray-700"
+          }`}
+        >
           {showCamera ? (
-            <video ref={videoRef} autoPlay muted playsInline className="h-40 rounded-lg" />
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              className="h-40 rounded-lg"
+            />
           ) : (
             <div className="w-20 h-20 rounded-full bg-green-600 flex items-center justify-center text-white text-2xl">
               {interviewInfo?.userName?.[0]?.toUpperCase() || "U"}
             </div>
           )}
           <span className="mt-2 text-gray-300">You</span>
-          {userSpeaking && <div className="mt-1 text-blue-400">Speaking...</div>}
-          <Button onClick={handleCameraToggle} variant="default" size="sm" className="mt-2">
+          {userSpeaking && (
+            <div className="mt-1 text-blue-400">Speaking...</div>
+          )}
+          <Button
+            onClick={handleCameraToggle}
+            variant="default"
+            size="sm"
+            className="mt-2"
+          >
             {showCamera ? "Hide Camera" : "Show Camera"}
           </Button>
         </div>
       </div>
 
       <div className="flex justify-center gap-4 mt-8">
-        <Button className={`flex items-center gap-2 ${userSpeaking ? "bg-green-700" : "bg-green-600"}`}>
+        <Button
+          className={`flex items-center gap-2 ${
+            userSpeaking ? "bg-green-700" : "bg-green-600"
+          }`}
+        >
           <Mic size={16} />
           {userSpeaking ? "Speaking..." : "Speak"}
         </Button>
@@ -189,16 +231,14 @@ Important:
       </div>
 
       <div className="text-center mt-4 text-gray-400">
-        {aiSpeaking ? "AI is speaking..."
-          : userSpeaking ? "Listening to you..."
-            : "Interview in progress"}
+        {aiSpeaking
+          ? "AI is speaking..."
+          : userSpeaking
+          ? "Listening to you..."
+          : "Interview in progress"}
       </div>
     </div>
   );
 };
 
 export default StartInterview;
-
-
-
-
